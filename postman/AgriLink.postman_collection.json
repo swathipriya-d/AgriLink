@@ -1,0 +1,752 @@
+{
+  "info": {
+    "name": "AgriLink — Farmer-to-Buyer Marketplace",
+    "description": "Local AgriLink REST API. Start the application with `pnpm dev` and import the sibling AgriLink Local environment. The built-in role sessions are a temporary, reset-on-restart demo only. The order flow sends no payment. Cloudinary credentials are optional; without them the upload request correctly returns UPLOAD_NOT_CONFIGURED.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "buyerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "farmerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "seed-tomato-001",
+      "type": "string"
+    },
+    {
+      "key": "createdProductId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "verificationId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Readiness and discovery",
+      "item": [
+        {
+          "name": "Health and active database mode",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health"
+          }
+        },
+        {
+          "name": "Browse/filter the harvests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products?search=tomato&category=Vegetables&maxPrice=150&inStock=true&sort=price-low&limit=12"
+          }
+        },
+        {
+          "name": "Read a sample tomato harvest",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Auth required · buyer orders (expected 401 without a token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/orders"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 · Demo JWT sessions (development only)",
+      "item": [
+        {
+          "name": "Get buyer demo token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Buyer demo session returns a JWT', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.environment.set('buyerToken', data.token);",
+                  "  pm.test('Role is buyer; password is never returned', () => { pm.expect(data.user.role).to.eql('buyer'); pm.expect(data.user.passwordHash).to.be.undefined; });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"buyer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/demo-session",
+            "description": "The seeded buyer session is temporary and exists only without a MongoDB URI."
+          }
+        },
+        {
+          "name": "Get farmer demo token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Farmer demo session returns a JWT', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.environment.set('farmerToken', data.token);",
+                  "  pm.expect(data.user.role).to.eql('farmer');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"farmer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/demo-session"
+          }
+        },
+        {
+          "name": "Get market keeper demo token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Moderator role only comes from the local demo seeder', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.environment.set('adminToken', data.token);",
+                  "  pm.expect(data.user.role).to.eql('admin');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/demo-session",
+            "description": "This demo action is disabled in Mongo mode. Administrator access cannot be created by public registration."
+          }
+        },
+        {
+          "name": "Buyer · current server-checked profile",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        },
+        {
+          "name": "Register a temporary buyer (edit the example first)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Example Buyer\",\n  \"email\": \"buyer@example.invalid\",\n  \"password\": \"replace-with-at-least-10-characters\",\n  \"role\": \"buyer\",\n  \"buyerType\": \"retailer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Never use a real password in this example. Accounts created with an in-memory demo store reset when the API restarts; Mongo mode persists accounts."
+          }
+        },
+        {
+          "name": "Password login (replace with your locally created account)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@example.invalid\",\n  \"password\": \"replace-with-at-least-10-characters\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 · Farmer studio — product inventory and market metrics",
+      "item": [
+        {
+          "name": "Create a pending fruit listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('A valid farmer listing is accepted and starts pending review', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const product = pm.response.json().data.product;",
+                  "  pm.environment.set('createdProductId', product._id);",
+                  "  pm.expect(product.verificationStatus).to.eql('pending');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo monsoon guava\",\n  \"cultivar\": \"Local small-batch fruit\",\n  \"category\": \"Fruits\",\n  \"pricePerKg\": 92,\n  \"stockKg\": 18,\n  \"minOrderKg\": 2,\n  \"harvestDate\": \"2026-09-29\",\n  \"deliveryWindow\": \"Tomorrow, 7–10 am\",\n  \"story\": \"A demonstration-only harvest note.\",\n  \"tags\": [\"Small batch\", \"Market sample\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/products",
+            "description": "Creates one illustrative in-memory listing for the temporary demo farmer. No photo is included."
+          }
+        },
+        {
+          "name": "Update your created listing price/stock",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pricePerKg\": 96,\n  \"stockKg\": 14\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/products/{{createdProductId}}"
+          }
+        },
+        {
+          "name": "Read incoming farm orders",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Farmer performance analytics",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/analytics/farmer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 · Buyer order request and fulfilment",
+      "item": [
+        {
+          "name": "Place a no-payment request for a sample tomato listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Creates an unpaid order request and retains its local ID', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const order = pm.response.json().data.order;",
+                  "  pm.environment.set('orderId', order._id);",
+                  "  pm.expect(order.status).to.eql('placed');",
+                  "  pm.expect(order.estimatedServiceFee).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"productId\": \"seed-tomato-001\", \"quantityKg\": 2 }\n  ],\n  \"deliveryNote\": \"Sample request only — please confirm availability.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders",
+            "description": "An order request reserves illustrative stock and changes to `placed`; it does not charge money. Cancel it below to return its stock."
+          }
+        },
+        {
+          "name": "Farmer confirms the example request",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders/{{orderId}}/status",
+            "description": "This succeeds when the sample seed tomato is still available and order is for the signed-in seed farmer."
+          }
+        },
+        {
+          "name": "Buyer reads private order history",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Buyer cancels and returns eligible stock",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelled\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
+            "description": "Cancellation is allowed from `confirmed`; the server returns the reserved quantity to available stock. No payment is involved."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 · Marketplace review",
+      "item": [
+        {
+          "name": "Submit a grower origin note for review",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmName\": \"Example Hill Collective\",\n  \"district\": \"Satara\",\n  \"state\": \"Maharashtra\",\n  \"crops\": [\"Seasonal vegetables\"],\n  \"practices\": \"Small-batch, field-grown\",\n  \"growerNote\": \"Review-test record; no regulated certification is implied.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/verification",
+            "description": "A moderator checks the submitted market origin note; this is not a food-safety or organic certification."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Grower-origin note entered the review queue', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const record = pm.response.json().data.verification;",
+                  "  pm.environment.set('verificationId', record._id);",
+                  "  pm.expect(record.status).to.eql('pending');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My latest grower review request",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/verification/me"
+          }
+        },
+        {
+          "name": "Admin · pending origin queue",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/verification/queue?status=pending"
+          }
+        },
+        {
+          "name": "Admin · listing-review queue",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/products/review-queue"
+          }
+        },
+        {
+          "name": "Admin · approve a listing (replace productId with a farmer-created pending listing)",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"verified\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/products/{{createdProductId}}/verification",
+            "description": "Keep this marketplace-review action separate from all food-safety or regulated-product certification claims."
+          }
+        },
+        {
+          "name": "Admin · review the newly submitted grower origin note",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"verified\",\n  \"reviewNote\": \"Sample marketplace-origin review only; no certification is implied.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/verification/{{verificationId}}/review",
+            "description": "Admin-only review of submitted marketplace identity details, not a regulated safety or certification claim."
+          }
+        },
+        {
+          "name": "Archive your created demo listing (optional, destructive to this one in-memory record)",
+          "request": {
+            "method": "DELETE",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/products/{{createdProductId}}",
+            "description": "Archives only the listing from the create-listing request, never the seeded market records."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 · Optional Cloudinary image upload",
+      "description": "Only succeeds when all server-only Cloudinary credentials are configured. An unconfigured server returns HTTP 503; no mock upload is claimed.",
+      "item": [
+        {
+          "name": "Upload one farmer product photo (pick an image file)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/uploads/image",
+            "description": "Allowed JPEG, PNG, WebP or AVIF up to 5 MiB. Set a real image file in the Postman form field named `image`; do not copy API keys into this request."
+          }
+        }
+      ]
+    }
+  ]
+}

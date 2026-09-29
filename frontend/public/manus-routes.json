@@ -1,0 +1,10 @@
+{
+  "routes": [
+    { "path": "/", "title": "Home — AgriLink" },
+    { "path": "/market", "title": "Market — AgriLink" },
+    { "path": "/product/:id", "title": "Harvest detail — AgriLink" },
+    { "path": "/farmer", "title": "Farm studio — AgriLink" },
+    { "path": "/orders", "title": "Your orders — AgriLink" },
+    { "path": "/how-it-works", "title": "The AgriLink difference" }
+  ]
+}

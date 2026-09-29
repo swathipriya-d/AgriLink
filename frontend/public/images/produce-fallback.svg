@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" fill="none" role="img" aria-label="An AgriLink produce crate illustration">
+  <rect width="720" height="520" fill="#e8ebdd"/>
+  <circle cx="565" cy="98" r="46" fill="#f2d986"/>
+  <path d="M0 327c94-52 178-46 267-17s177 36 274-21 125-65 179-40v271H0V327Z" fill="#bdcda9"/>
+  <path d="M0 381c142-63 237 43 369-3s207-55 351 2v140H0V381Z" fill="#819b73"/>
+  <path d="M198 273h325l-24 151H223l-25-151Z" fill="#bc754d"/>
+  <path d="m199 297 324-1m-316 38h301m-290 38h279" stroke="#f0d5ad" stroke-width="17" stroke-linecap="round"/>
+  <g fill="#c95e45">
+    <path d="M277 280c-7-33 11-62 40-63 26-1 40 24 39 63h-79Z"/>
+    <path d="M347 276c-3-39 20-65 49-61 29 4 41 29 33 62l-82-1Z"/>
+    <path d="M414 277c1-32 17-54 42-54 25 1 37 23 32 57l-74-3Z"/>
+  </g>
+  <g fill="#80925a">
+    <path d="M310 219c-1-21 9-33 21-48 13 23 9 38-21 48Z"/>
+    <path d="M377 214c1-21 13-32 28-45 10 25 3 39-28 45Z"/>
+    <path d="M450 217c-1-19 7-32 20-47 13 22 10 38-20 47Z"/>
+  </g>
+  <path d="M160 443h393" stroke="#173b2e" stroke-width="7" stroke-linecap="round" opacity=".18"/>
+  <text x="360" y="484" fill="#34523e" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" letter-spacing="3">DRAWN IN THE MARKET GARDEN</text>
+</svg>

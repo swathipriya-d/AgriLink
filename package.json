@@ -1,0 +1,20 @@
+{
+  "name": "agrilink-marketplace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AgriLink direct farmer-to-buyer marketplace — hackathon project",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=20.10.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names API,WEB --prefix-colors yellow,cyan \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
+    "build": "pnpm --dir frontend build",
+    "check": "pnpm --dir backend check && pnpm --dir frontend build",
+    "start": "pnpm --dir backend start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
