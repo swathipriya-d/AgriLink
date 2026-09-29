@@ -115,15 +115,10 @@ AgriLink/
 
 This folder is complete source code for a local demonstration. It is **not** a deployed AWS/Vercel service; no production database, Cloudinary credentials, email provider, delivery/fulfilment integration, payment gateway, or moderator identity provider is configured. No individual GitHub destination was specified, so the project is not pushed to a personal GitHub account. The project repository is ready for you to connect to your own GitHub remote. Do not use the fictional example accounts as real-world identities or treat demo metrics as verified impact.
 
-## Put your handoff copy on your GitHub
+🔗 GitHub Repository
 
-The separate judge folder is prepared for local Git use; it is **not connected to a personal remote**. Use a repository you own, then add and push it from the VS Code terminal:
+The AgriLink project source code and documentation are available in this repository.
 
-```bash
-git add .
-git commit -m "Build the AgriLink harvest marketplace"
-git remote add origin https://github.com/<your-account>/<your-repository>.git
-git push -u origin main
-```
+The repository contains the complete frontend, backend, demo data, API documentation, Postman collection, and setup instructions required to run the project locally.
 
-Create the matching empty GitHub repository first, replace both placeholders, and complete GitHub authentication in your own Git client. Keep real `.env` files out of the repo; the included `.gitignore` excludes them. The optional `.env.example` contains only blank secret fields.
+«⚠️ Environment files containing secrets are excluded from Git. Use "backend/.env.example" as the template for local configuration.»
